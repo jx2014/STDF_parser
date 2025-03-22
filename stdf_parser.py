@@ -66,17 +66,17 @@ class ReadSTDF:
         self.stdf = None
         self.byte_position = 0
         self.decode_record = {0: {10: "FAR", 20: "ATR"},
-                           1: {10: "MIR", 20: "MRR", 30: "PCR", 40: "HBR", 50: "SBR",
-                               60: "PMR", 62: "PGR", 63: "PLR",
-                               70: "RDR", 80: "SDR"},
-                           2: {10: "WIR", 20: "WRR", 30: "WCR"},
-                           5: {10: "PIR", 20: self.decode_prr},
-                           10: {30: "TSR"},
-                           15: {10: "PTR", 15: "MPR", 20: "FTR"},
-                           20: {10: "BPS", 20: "EPS"},
-                           50: {10: "GDR", 30: "DTR"},
-                           180: {0: "Reserved"},
-                           181: {0: "Reserved"}}
+                               1: {10: "MIR", 20: "MRR", 30: "PCR", 40: "HBR", 50: "SBR",
+                                   60: "PMR", 62: "PGR", 63: "PLR",
+                                   70: "RDR", 80: "SDR"},
+                               2: {10: "WIR", 20: "WRR", 30: "WCR"},
+                               5: {10: "PIR", 20: self.decode_prr},
+                               10: {30: "TSR"},
+                               15: {10: "PTR", 15: "MPR", 20: "FTR"},
+                               20: {10: "BPS", 20: "EPS"},
+                               50: {10: "GDR", 30: "DTR"},
+                               180: {0: "Reserved"},
+                               181: {0: "Reserved"}}
         self.all_prr = {}
         self.max_x = self.max_y = -32767
         self.min_x = self.min_y =  32767
@@ -217,8 +217,6 @@ class ReadSTDF:
             field_values[field_name] = data[0:n].decode().strip()
             data = data[n:]
             i = i + 1
-        # for i, k in field_values.items():
-        #     print(f"{i+':':20}{k}")
         if x < self.min_x:
             self.min_x = x
         elif x > self.max_x:
@@ -227,7 +225,7 @@ class ReadSTDF:
             self.min_y = y
         elif y > self.max_y:
             self.max_y = y
-        self.all_prr[field_values["PART_ID"]] = {x, y}
+        self.all_prr[field_values["PART_ID"]] = {'x': x, 'y': y}
 
 
     def process(self):
@@ -245,22 +243,40 @@ class ReadSTDF:
         self.show_part_results()
 
     def show_part_results(self):
-        grid_width = self.max_x - self.min_x
-        grid_height = self.max_y - self.min_y
-        for part_id, x, y in self.all_prr
+        print("\nShowing Part Results Record\n")
+        part_matrix = {}
+        for part_id, coords in self.all_prr.items():
+            x = coords.get('x')
+            y = coords.get('y')
+            print(f"x={x:6}   y={y:6}   part ID={part_id:>6}")
+            if y not in part_matrix.keys():
+                part_matrix[y] = {}
+            part_matrix[y].update({x: part_id})
+        self.print_part_grid(part_matrix)
 
-
-
-
-
-
-
-
+    def print_part_grid(self, part_matrix):
+        print("\nPart Result Grid View")
+        print("     ", end="")
+        for c in range(self.min_x-1, self.max_x+2, 1):
+            print(f"{c:^5}", end="")
+        print("\r")
+        for row in range(self.max_y+1, self.min_y-2, -1):
+            print(f"{row:^5}", end="")
+            for col in range(self.min_x-1, self.max_x+2, 1):
+                r = part_matrix.get(row)
+                if r is not None:
+                    part_id = r.get(col)
+                else:
+                    part_id = None
+                if part_id is None:
+                    part_id = " "
+                print(f"{part_id:^5}", end="")
+            print("\r")
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        sys.exit("Need to specific STDF file like this: stdf_parser.py test_file.stdf")
+        sys.exit("Need to specify a STDF file like this: stdf_parser.py test_file.stdf")
     else:
         with ReadSTDF(sys.argv[1]) as stdf:
             stdf.process()
