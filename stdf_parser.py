@@ -254,7 +254,7 @@ class ReadSTDF:
         self.print_part_grid(part_matrix)
 
     def print_part_grid(self, part_matrix):
-        print("\nPart Result Grid View")
+        print("\nPart Results Grid View")
         print("     ", end="")
         for c in range(self.min_x-1, self.max_x+2, 1):
             print(f"{c:^5}", end="")
